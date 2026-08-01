@@ -1,41 +1,108 @@
 import Link from "next/link";
+import { CreditCard, LayoutDashboard, ShieldCheck } from "lucide-react";
 
 import { buttonVariants } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PlanFeatureList } from "@/components/billing/PlanFeatureList";
+import { TechStack } from "@/components/layout/TechStack";
 import { PLANS } from "@/lib/plans";
+import { cn } from "@/lib/utils";
+
+const FEATURES = [
+  {
+    icon: ShieldCheck,
+    title: "Auth, ready to go",
+    description: "Email/password and Google sign-in, sessions, and route protection out of the box.",
+  },
+  {
+    icon: CreditCard,
+    title: "Subscriptions built in",
+    description: "Stripe Checkout, the Customer Portal, and webhook-synced plan status.",
+  },
+  {
+    icon: LayoutDashboard,
+    title: "A dashboard to build on",
+    description: "A protected app shell already wired up. Add your product's real features next.",
+  },
+];
 
 export default function LandingPage() {
   return (
-    <div className="mx-auto flex max-w-5xl flex-col gap-24 px-6 py-24">
+    <div className="mx-auto flex max-w-5xl flex-col gap-20 px-6 pt-10 pb-20 sm:gap-28 sm:pt-14 sm:pb-28">
       <section className="flex flex-col items-center gap-6 text-center">
-        <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
-          Ship your SaaS, not your auth and billing.
+        <span className="font-mono text-xs font-medium tracking-wide text-primary uppercase">
+          Open-source SaaS starter
+        </span>
+        <h1 className="max-w-3xl font-mono text-4xl font-bold tracking-tight text-balance sm:text-6xl">
+          Your SaaS,{" "}
+          <span className="bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            already wired up.
+          </span>
         </h1>
-        <p className="max-w-2xl text-lg text-muted-foreground">
-          A starter kit with authentication, subscriptions, and a dashboard already wired up —
-          so you can focus on the product.
+        <p className="max-w-2xl text-lg text-muted-foreground text-balance">
+          Authentication, subscriptions, and a dashboard, built and tested. Spend your time on
+          what makes your product different.
         </p>
-        <Link href="/sign-up" className={buttonVariants({ size: "lg" })}>
-          Get started for free
-        </Link>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <Link href="/sign-up" className={buttonVariants({ size: "lg" })}>
+            Get started for free
+          </Link>
+          <Link href="#pricing" className={buttonVariants({ size: "lg", variant: "outline" })}>
+            View pricing
+          </Link>
+        </div>
+        <TechStack />
       </section>
 
-      <section id="pricing" className="flex flex-col gap-8">
-        <h2 className="text-center text-2xl font-semibold">Simple, transparent pricing</h2>
-        <div className="grid gap-6 sm:grid-cols-3">
+      <section className="grid gap-6 sm:grid-cols-3">
+        {FEATURES.map(({ icon: Icon, title, description }) => (
+          <Card key={title} className="border-none bg-transparent shadow-none">
+            <CardHeader className="items-center text-center sm:items-start sm:text-left">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+                <Icon className="size-5 text-primary" />
+              </div>
+              <CardTitle className="mt-2">{title}</CardTitle>
+              <p className="text-sm text-muted-foreground">{description}</p>
+            </CardHeader>
+          </Card>
+        ))}
+      </section>
+
+      <section id="pricing" className="flex flex-col gap-10 scroll-mt-20">
+        <div className="flex flex-col items-center gap-2 text-center">
+          <h2 className="font-mono text-3xl font-semibold tracking-tight">
+            Simple, transparent pricing
+          </h2>
+          <p className="text-muted-foreground">Start free. Upgrade whenever you need more.</p>
+        </div>
+        <div className="grid gap-6 sm:grid-cols-3 sm:items-start">
           {PLANS.map((plan) => (
-            <Card key={plan.name}>
-              <CardHeader>
-                <CardTitle>{plan.label}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="flex flex-col gap-2 text-sm text-muted-foreground">
-                  {plan.features.map((feature) => (
-                    <li key={feature}>{feature}</li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+            <div key={plan.name} className="relative">
+              {plan.popular && (
+                <Badge className="absolute -top-3 left-1/2 z-10 -translate-x-1/2">
+                  Most popular
+                </Badge>
+              )}
+              <Card className={cn(plan.popular && "border-primary shadow-md shadow-primary/10")}>
+                <CardHeader>
+                  <CardTitle>{plan.label}</CardTitle>
+                  <p className="mt-1 text-2xl font-semibold">
+                    {plan.priceLabel}
+                    <span className="text-sm font-normal text-muted-foreground">/mo</span>
+                  </p>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-4">
+                  <PlanFeatureList features={plan.features} />
+                  <Link
+                    href="/sign-up"
+                    className={buttonVariants({ variant: plan.popular ? "default" : "outline" })}
+                  >
+                    Get started
+                  </Link>
+                </CardContent>
+              </Card>
+            </div>
           ))}
         </div>
       </section>
