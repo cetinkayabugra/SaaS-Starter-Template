@@ -1,36 +1,116 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SaaS Starter
 
-## Getting Started
+A full-stack SaaS starter kit with authentication and subscription billing already wired up, so you can focus on your product instead of re-building auth and payments.
 
-First, run the development server:
+## Stack
+
+- **Framework**: Next.js (App Router) — Route Handlers and Server Actions as the backend, no separate API server
+- **Database**: PostgreSQL via [Prisma](https://www.prisma.io/)
+- **Auth**: [Auth.js v5](https://authjs.dev/) — email/password (credentials) + Google OAuth
+- **Billing**: [Stripe](https://stripe.com/) — recurring subscriptions, Checkout, and the Customer Portal
+- **UI**: Tailwind CSS + [shadcn/ui](https://ui.shadcn.com/)
+- **Package manager**: pnpm
+
+## Prerequisites
+
+- Node.js 20+
+- [pnpm](https://pnpm.io/installation)
+- A PostgreSQL database — either:
+  - Local, via [Docker](https://www.docker.com/products/docker-desktop/) (`docker-compose.yml` is included), or
+  - A free hosted instance, e.g. [Neon](https://neon.tech) or [Supabase](https://supabase.com)
+- A [Stripe](https://dashboard.stripe.com/register) account (test mode is fine)
+- A [Google Cloud](https://console.cloud.google.com/) project, if you want Google sign-in
+
+## Setup
+
+### 1. Install dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Configure environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cp .env.example .env
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Then fill in `.env` — see [Environment variables](#environment-variables) below for where to get each value.
 
-## Learn More
+### 3. Set up the database
 
-To learn more about Next.js, take a look at the following resources:
+**Option A — local Postgres via Docker:**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+docker compose up -d
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This matches the default `DATABASE_URL` in `.env.example`.
 
-## Deploy on Vercel
+**Option B — hosted Postgres (Neon/Supabase/etc.):** create a database and put its connection string in `DATABASE_URL` instead. Use the *direct* (non-pooled) connection string for running migrations — pooled/PgBouncer connections can break Prisma's migration engine.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Then apply the schema:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+pnpm prisma migrate dev --name init
+```
+
+### 4. Run the app
+
+```bash
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000).
+
+### 5. (Optional) Forward Stripe webhooks locally
+
+Subscription status only syncs to the database when Stripe's webhook fires. Locally, that means running the [Stripe CLI](https://docs.stripe.com/stripe-cli):
+
+```bash
+stripe listen --forward-to localhost:3000/api/webhooks/stripe
+```
+
+It prints a `whsec_...` value — put that in `STRIPE_WEBHOOK_SECRET` in `.env` (it changes each time you start `stripe listen`, so update it whenever you restart the CLI).
+
+## Environment variables
+
+| Variable | Description | Where to get it |
+|---|---|---|
+| `DATABASE_URL` | Postgres connection string | Your local Docker Postgres, or your Neon/Supabase project's connection string |
+| `NEXTAUTH_SECRET` | Secret used to sign session tokens | Generate with `openssl rand -base64 32` |
+| `NEXTAUTH_URL` | Base URL of the app | `http://localhost:3000` in dev |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials (optional — omit to disable Google sign-in) | [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials → OAuth client ID (Web application). Add `http://localhost:3000/api/auth/callback/google` as an authorized redirect URI |
+| `STRIPE_SECRET_KEY` | Stripe secret API key | [Stripe Dashboard](https://dashboard.stripe.com/test/apikeys) → Developers → API keys (use the test-mode key while developing) |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable API key | Same page as above |
+| `STRIPE_WEBHOOK_SECRET` | Verifies that webhook requests actually came from Stripe | Printed by `stripe listen` locally, or from the webhook endpoint's settings in the Stripe Dashboard once deployed |
+| `STRIPE_PRICE_ID_PRO` / `STRIPE_PRICE_ID_TEAM` | Price IDs for the Pro/Team recurring plans | [Stripe Dashboard](https://dashboard.stripe.com/test/products) → Product catalog — create a product with a recurring price for each plan |
+| `NEXT_PUBLIC_APP_URL` | Base URL used to build Stripe redirect URLs | `http://localhost:3000` in dev |
+
+All of these are validated at startup (`lib/env.ts`, wired via `instrumentation.ts`) — if one is missing, you'll get a clear error instead of a cryptic failure deep in a request handler.
+
+## Project structure
+
+```
+app/
+├── (marketing)/    # public landing page
+├── (auth)/         # sign-in / sign-up
+├── (app)/          # protected dashboard + billing pages
+├── api/
+│   ├── auth/       # Auth.js handler
+│   └── webhooks/   # Stripe webhook receiver
+actions/            # Server Actions (sign-up, checkout, billing portal)
+components/         # UI components (auth, billing, layout, shadcn primitives)
+lib/                # auth config, Prisma client, Stripe client, plans, env validation
+prisma/             # schema + migrations
+```
+
+## Scripts
+
+```bash
+pnpm dev            # start the dev server
+pnpm build           # production build
+pnpm start           # run the production build
+pnpm prisma studio   # browse the database
+pnpm prisma migrate dev --name <name>   # create and apply a migration
+```
