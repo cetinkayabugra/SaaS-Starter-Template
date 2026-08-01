@@ -37,9 +37,11 @@ export default async function BillingPage() {
           <PlanCard
             key={plan.name}
             label={plan.label}
+            priceLabel={plan.priceLabel}
             priceId={plan.priceId ?? null}
             features={plan.features}
             isCurrent={plan.name === currentPlan}
+            popular={plan.popular}
           />
         ))}
       </div>
