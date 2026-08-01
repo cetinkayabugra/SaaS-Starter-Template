@@ -10,6 +10,7 @@ import { signUp } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 
 type FormValues = {
   name: string;
@@ -89,6 +90,12 @@ export function SignUpForm() {
       <Button type="submit" disabled={isSubmitting} className="mt-2">
         {isSubmitting ? "Creating account…" : "Create account"}
       </Button>
+
+      <div className="flex items-center gap-3">
+        <Separator className="flex-1" />
+        <span className="text-xs text-muted-foreground">OR</span>
+        <Separator className="flex-1" />
+      </div>
 
       <Button
         type="button"

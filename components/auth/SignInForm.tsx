@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 
 type FormValues = {
   email: string;
@@ -72,6 +73,12 @@ export function SignInForm() {
       <Button type="submit" disabled={isSubmitting} className="mt-2">
         {isSubmitting ? "Signing in…" : "Sign in"}
       </Button>
+
+      <div className="flex items-center gap-3">
+        <Separator className="flex-1" />
+        <span className="text-xs text-muted-foreground">OR</span>
+        <Separator className="flex-1" />
+      </div>
 
       <Button
         type="button"
