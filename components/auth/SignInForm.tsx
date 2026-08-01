@@ -41,6 +41,8 @@ export function SignInForm() {
 
       router.push("/dashboard");
       router.refresh();
+    } catch {
+      toast.error("Couldn't reach the server. Check your connection and try again.");
     } finally {
       setIsSubmitting(false);
     }

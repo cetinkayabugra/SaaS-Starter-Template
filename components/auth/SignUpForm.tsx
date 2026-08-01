@@ -49,6 +49,8 @@ export function SignUpForm() {
       }
 
       router.push("/dashboard");
+    } catch {
+      toast.error("Couldn't reach the server. Check your connection and try again.");
     } finally {
       setIsSubmitting(false);
     }

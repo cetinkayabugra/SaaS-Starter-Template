@@ -19,25 +19,30 @@ export async function signUp(input: z.infer<typeof signUpSchema>) {
   }
   const data = parsed.data;
 
-  const existing = await prisma.user.findUnique({ where: { email: data.email } });
-  if (existing) {
-    return { error: "Email already in use" };
-  }
+  try {
+    const existing = await prisma.user.findUnique({ where: { email: data.email } });
+    if (existing) {
+      return { error: "Email already in use" };
+    }
 
-  const hashedPassword = await hashPassword(data.password);
-  const customer = await stripe.customers.create({
-    email: data.email,
-    name: data.name,
-  });
-
-  await prisma.user.create({
-    data: {
-      name: data.name,
+    const hashedPassword = await hashPassword(data.password);
+    const customer = await stripe.customers.create({
       email: data.email,
-      hashedPassword,
-      stripeCustomerId: customer.id,
-    },
-  });
+      name: data.name,
+    });
 
-  return { success: true as const };
+    await prisma.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        hashedPassword,
+        stripeCustomerId: customer.id,
+      },
+    });
+
+    return { success: true as const };
+  } catch (error) {
+    console.error("signUp failed:", error);
+    return { error: "Something went wrong creating your account. Please try again." };
+  }
 }
