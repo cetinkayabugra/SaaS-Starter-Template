@@ -3,6 +3,7 @@ import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { Logo } from "@/components/layout/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { FooterLinks } from "@/components/layout/FooterLinks";
 
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -22,8 +23,11 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
         </div>
       </header>
       <main className="flex-1">{children}</main>
-      <footer className="border-t px-6 py-4 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} SaaS Starter. All rights reserved.
+      <footer className="border-t px-6 py-8 text-sm text-muted-foreground">
+        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-4 sm:flex-row">
+          <p>© {new Date().getFullYear()} SaaS Starter. All rights reserved.</p>
+          <FooterLinks />
+        </div>
       </footer>
     </div>
   );
