@@ -14,9 +14,25 @@ export async function createCheckoutSession(priceId: string) {
   try {
     const user = await prisma.user.findUniqueOrThrow({ where: { id: session.user.id } });
 
+    // Accounts created via OAuth (Google) skip actions/auth.ts's signUp flow,
+    // so they never get a Stripe customer — create one lazily here instead
+    // of assuming every sign-up path remembers to do it.
+    let stripeCustomerId = user.stripeCustomerId;
+    if (!stripeCustomerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.name ?? undefined,
+      });
+      stripeCustomerId = customer.id;
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { stripeCustomerId },
+      });
+    }
+
     const checkout = await stripe.checkout.sessions.create({
       mode: "subscription",
-      customer: user.stripeCustomerId!,
+      customer: stripeCustomerId,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/account/billing?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/account/billing?canceled=true`,
