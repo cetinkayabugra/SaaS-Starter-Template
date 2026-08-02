@@ -1,11 +1,14 @@
 import Link from "next/link";
 
+import { auth } from "@/lib/auth";
 import { buttonVariants } from "@/components/ui/button";
 import { Logo } from "@/components/layout/Logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { FooterLinks } from "@/components/layout/FooterLinks";
 
-export default function MarketingLayout({ children }: { children: React.ReactNode }) {
+export default async function MarketingLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+
   return (
     <div className="flex min-h-svh flex-col">
       <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-sm">
@@ -13,12 +16,20 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           <Logo />
           <nav className="flex items-center gap-2">
             <ThemeToggle />
-            <Link href="/sign-in" className={buttonVariants({ variant: "ghost" })}>
-              Sign in
-            </Link>
-            <Link href="/sign-up" className={buttonVariants()}>
-              Get started
-            </Link>
+            {session?.user ? (
+              <Link href="/dashboard" className={buttonVariants()}>
+                Dashboard
+              </Link>
+            ) : (
+              <>
+                <Link href="/sign-in" className={buttonVariants({ variant: "ghost" })}>
+                  Sign in
+                </Link>
+                <Link href="/sign-up" className={buttonVariants()}>
+                  Get started
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </header>

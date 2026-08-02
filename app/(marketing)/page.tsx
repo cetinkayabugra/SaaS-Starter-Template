@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CreditCard, LayoutDashboard, ShieldCheck } from "lucide-react";
 
+import { auth } from "@/lib/auth";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,7 +28,11 @@ const FEATURES = [
   },
 ];
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const session = await auth();
+  const ctaHref = session?.user ? "/dashboard" : "/sign-up";
+  const ctaLabel = session?.user ? "Go to dashboard" : "Get started";
+
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-20 px-6 pt-10 pb-20 sm:gap-28 sm:pt-14 sm:pb-28">
       <section className="flex flex-col items-center gap-6 text-center">
@@ -45,8 +50,8 @@ export default function LandingPage() {
           what makes your product different.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Link href="/sign-up" className={buttonVariants({ size: "lg" })}>
-            Get started for free
+          <Link href={ctaHref} className={buttonVariants({ size: "lg" })}>
+            {session?.user ? ctaLabel : "Get started for free"}
           </Link>
           <Link href="#pricing" className={buttonVariants({ size: "lg", variant: "outline" })}>
             View pricing
@@ -95,10 +100,10 @@ export default function LandingPage() {
                 <CardContent className="flex flex-col gap-4">
                   <PlanFeatureList features={plan.features} />
                   <Link
-                    href="/sign-up"
+                    href={ctaHref}
                     className={buttonVariants({ variant: plan.popular ? "default" : "outline" })}
                   >
-                    Get started
+                    {ctaLabel}
                   </Link>
                 </CardContent>
               </Card>
