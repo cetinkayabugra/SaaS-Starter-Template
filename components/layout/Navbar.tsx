@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -49,7 +52,7 @@ export function Navbar() {
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" aria-label="Account menu">
                   <Avatar>
                     <AvatarFallback>{initial.toUpperCase()}</AvatarFallback>
                   </Avatar>
@@ -57,6 +60,14 @@ export function Navbar() {
               }
             />
             <DropdownMenuContent align="end">
+              {session?.user?.email && (
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
+                    {session.user.email}
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                </DropdownMenuGroup>
+              )}
               <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })}>
                 Sign out
               </DropdownMenuItem>
