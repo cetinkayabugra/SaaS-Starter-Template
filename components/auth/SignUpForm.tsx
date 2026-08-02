@@ -57,7 +57,7 @@ export function SignUpForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <Label htmlFor="name">Name</Label>
         <Input id="name" {...register("name", { required: "Name is required" })} />
@@ -69,7 +69,10 @@ export function SignUpForm() {
         <Input
           id="email"
           type="email"
-          {...register("email", { required: "Email is required" })}
+          {...register("email", {
+            required: "Email is required",
+            pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Enter a valid email" },
+          })}
         />
         {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
       </div>
