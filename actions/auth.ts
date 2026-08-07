@@ -1,18 +1,11 @@
 "use server";
 
-import { z } from "zod";
-
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
 import { stripe } from "@/lib/stripe";
+import { signUpSchema, type SignUpInput } from "@/lib/validations";
 
-const signUpSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  email: z.string().email("Enter a valid email"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-});
-
-export async function signUp(input: z.infer<typeof signUpSchema>) {
+export async function signUp(input: SignUpInput) {
   const parsed = signUpSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };

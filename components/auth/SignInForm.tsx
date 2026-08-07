@@ -3,18 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import { toast } from "sonner";
 
+import { signInSchema, type SignInInput } from "@/lib/validations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-
-type FormValues = {
-  email: string;
-  password: string;
-};
 
 export function SignInForm() {
   const router = useRouter();
@@ -23,9 +20,9 @@ export function SignInForm() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormValues>();
+  } = useForm<SignInInput>({ resolver: zodResolver(signInSchema) });
 
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: SignInInput) {
     setIsSubmitting(true);
     try {
       const result = await signIn("credentials", {
@@ -52,24 +49,13 @@ export function SignInForm() {
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          {...register("email", {
-            required: "Email is required",
-            pattern: { value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, message: "Enter a valid email" },
-          })}
-        />
+        <Input id="email" type="email" {...register("email")} />
         {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
       </div>
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="password">Password</Label>
-        <Input
-          id="password"
-          type="password"
-          {...register("password", { required: "Password is required" })}
-        />
+        <Input id="password" type="password" {...register("password")} />
         {errors.password && (
           <p className="text-sm text-destructive">{errors.password.message}</p>
         )}
