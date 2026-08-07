@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/password";
-import { stripe } from "@/lib/stripe";
+import { ensureStripeCustomerId } from "@/lib/stripe-customer";
 import { signUpSchema, type SignUpInput } from "@/lib/validations";
 
 export async function signUp(input: SignUpInput) {
@@ -19,19 +19,14 @@ export async function signUp(input: SignUpInput) {
     }
 
     const hashedPassword = await hashPassword(data.password);
-    const customer = await stripe.customers.create({
-      email: data.email,
-      name: data.name,
-    });
-
-    await prisma.user.create({
+    const user = await prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
         hashedPassword,
-        stripeCustomerId: customer.id,
       },
     });
+    await ensureStripeCustomerId(user);
 
     return { success: true as const };
   } catch (error) {
