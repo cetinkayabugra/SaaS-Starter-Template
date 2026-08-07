@@ -71,7 +71,20 @@ export async function POST(req: Request) {
   return new Response(null, { status: 200 });
 }
 
+function mapStripeStatus(status: Stripe.Subscription.Status): SubscriptionStatus | null {
+  const key = status.toUpperCase() as keyof typeof SubscriptionStatus;
+  return key in SubscriptionStatus ? SubscriptionStatus[key] : null;
+}
+
 async function upsertSubscription(subscription: Stripe.Subscription, userId: string) {
+  const status = mapStripeStatus(subscription.status);
+  if (!status) {
+    console.error(
+      `Unrecognized Stripe subscription status "${subscription.status}" for subscription ${subscription.id}; skipping sync.`
+    );
+    return;
+  }
+
   const item = subscription.items.data[0];
   const priceId = item.price.id;
   const productId =
@@ -83,10 +96,7 @@ async function upsertSubscription(subscription: Stripe.Subscription, userId: str
     stripeSubscriptionId: subscription.id,
     stripePriceId: priceId,
     stripeProductId: productId,
-    status:
-      SubscriptionStatus[
-        subscription.status.toUpperCase() as keyof typeof SubscriptionStatus
-      ],
+    status,
     plan: planForPriceId(priceId),
     currentPeriodEnd: new Date(item.current_period_end * 1000),
     cancelAtPeriodEnd: subscription.cancel_at_period_end,
