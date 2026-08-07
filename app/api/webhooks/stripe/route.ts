@@ -4,7 +4,7 @@ import Stripe from "stripe";
 import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { planForPriceId } from "@/lib/plans";
-import { SubscriptionStatus } from "@/lib/generated/prisma/enums";
+import { mapStripeStatus } from "@/lib/stripe-status";
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -69,11 +69,6 @@ export async function POST(req: Request) {
   }
 
   return new Response(null, { status: 200 });
-}
-
-function mapStripeStatus(status: Stripe.Subscription.Status): SubscriptionStatus | null {
-  const key = status.toUpperCase() as keyof typeof SubscriptionStatus;
-  return key in SubscriptionStatus ? SubscriptionStatus[key] : null;
 }
 
 async function upsertSubscription(subscription: Stripe.Subscription, userId: string) {
