@@ -16,10 +16,21 @@ export async function ensureStripeCustomerId(user: StripeCustomerUser): Promise<
     name: user.name ?? undefined,
   });
 
-  await prisma.user.update({
-    where: { id: user.id },
+  // Only persist if the user still has no customer id — guards against two
+  // concurrent calls (e.g. a double-clicked checkout) both creating a Stripe
+  // customer for the same user.
+  const { count } = await prisma.user.updateMany({
+    where: { id: user.id, stripeCustomerId: null },
     data: { stripeCustomerId: customer.id },
   });
+
+  if (count === 0) {
+    // Lost the race — another call already persisted a customer id first.
+    // Discard the one we just created instead of leaving it orphaned.
+    await stripe.customers.del(customer.id);
+    const existing = await prisma.user.findUniqueOrThrow({ where: { id: user.id } });
+    return existing.stripeCustomerId!;
+  }
 
   return customer.id;
 }
