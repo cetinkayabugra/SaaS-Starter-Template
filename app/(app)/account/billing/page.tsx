@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { PLANS } from "@/lib/plans";
+import { isSubscriptionActive } from "@/lib/entitlements";
 import { PlanCard } from "@/components/billing/PlanCard";
 import { ManageBillingButton } from "@/components/billing/ManageBillingButton";
 
@@ -14,7 +15,7 @@ export default async function BillingPage() {
     where: { userId: session.user.id },
   });
 
-  const isActive = subscription?.status === "ACTIVE" || subscription?.status === "TRIALING";
+  const isActive = subscription != null && isSubscriptionActive(subscription.status);
   const currentPlan = isActive ? subscription.plan : "free";
 
   return (
