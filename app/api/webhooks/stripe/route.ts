@@ -5,6 +5,7 @@ import { stripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { planForPriceId } from "@/lib/plans";
 import { mapStripeStatus } from "@/lib/stripe-status";
+import { env } from "@/lib/env";
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -16,7 +17,7 @@ export async function POST(req: Request) {
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, signature, process.env.STRIPE_WEBHOOK_SECRET!);
+    event = stripe.webhooks.constructEvent(body, signature, env.STRIPE_WEBHOOK_SECRET);
   } catch {
     return new Response("Webhook signature verification failed", { status: 400 });
   }

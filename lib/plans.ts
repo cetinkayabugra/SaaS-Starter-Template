@@ -1,3 +1,5 @@
+import { env } from "@/lib/env";
+
 export const PLANS = [
   {
     name: "free",
@@ -11,7 +13,7 @@ export const PLANS = [
     name: "pro",
     label: "Pro",
     priceLabel: "$19",
-    priceId: process.env.STRIPE_PRICE_ID_PRO,
+    priceId: env.STRIPE_PRICE_ID_PRO,
     popular: true,
     features: ["Unlimited projects", "Priority support"],
   },
@@ -19,7 +21,7 @@ export const PLANS = [
     name: "team",
     label: "Team",
     priceLabel: "$49",
-    priceId: process.env.STRIPE_PRICE_ID_TEAM,
+    priceId: env.STRIPE_PRICE_ID_TEAM,
     popular: false,
     features: ["Everything in Pro", "Team seats"],
   },
