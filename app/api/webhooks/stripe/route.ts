@@ -81,6 +81,12 @@ async function upsertSubscription(subscription: Stripe.Subscription, userId: str
   }
 
   const item = subscription.items.data[0];
+  if (!item) {
+    console.error(
+      `Subscription ${subscription.id} has no line items; skipping sync.`
+    );
+    return;
+  }
   const priceId = item.price.id;
   const productId =
     typeof item.price.product === "string" ? item.price.product : item.price.product.id;
