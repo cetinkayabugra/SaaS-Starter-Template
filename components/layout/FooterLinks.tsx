@@ -1,5 +1,3 @@
-"use client";
-
 import { BookOpen } from "lucide-react";
 import { SiGithub } from "react-icons/si";
 

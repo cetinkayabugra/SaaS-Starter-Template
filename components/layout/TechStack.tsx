@@ -1,5 +1,3 @@
-"use client";
-
 import { KeyRound } from "lucide-react";
 import { SiNextdotjs, SiPostgresql, SiPrisma, SiStripe, SiTailwindcss } from "react-icons/si";
 
