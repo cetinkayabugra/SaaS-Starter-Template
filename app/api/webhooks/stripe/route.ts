@@ -6,6 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { planForPriceId } from "@/lib/plans";
 import { mapStripeStatus } from "@/lib/stripe-status";
 import { env } from "@/lib/env";
+import { SubscriptionStatus } from "@/lib/generated/prisma/enums";
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -50,7 +51,7 @@ export async function POST(req: Request) {
       const subscription = event.data.object as Stripe.Subscription;
       await prisma.subscription.updateMany({
         where: { stripeSubscriptionId: subscription.id },
-        data: { status: "CANCELED", plan: "free" },
+        data: { status: SubscriptionStatus.CANCELED, plan: "free" },
       });
       break;
     }
@@ -60,7 +61,7 @@ export async function POST(req: Request) {
       if (subscriptionId) {
         await prisma.subscription.updateMany({
           where: { stripeSubscriptionId: subscriptionId as string },
-          data: { status: "PAST_DUE" },
+          data: { status: SubscriptionStatus.PAST_DUE },
         });
       }
       break;
