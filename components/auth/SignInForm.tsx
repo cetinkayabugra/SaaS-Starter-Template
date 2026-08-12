@@ -49,15 +49,33 @@ export function SignInForm() {
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
         <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" {...register("email")} />
-        {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+        <Input
+          id="email"
+          type="email"
+          aria-invalid={!!errors.email}
+          aria-describedby={errors.email ? "email-error" : undefined}
+          {...register("email")}
+        />
+        {errors.email && (
+          <p id="email-error" className="text-sm text-destructive">
+            {errors.email.message}
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">
         <Label htmlFor="password">Password</Label>
-        <Input id="password" type="password" {...register("password")} />
+        <Input
+          id="password"
+          type="password"
+          aria-invalid={!!errors.password}
+          aria-describedby={errors.password ? "password-error" : undefined}
+          {...register("password")}
+        />
         {errors.password && (
-          <p className="text-sm text-destructive">{errors.password.message}</p>
+          <p id="password-error" className="text-sm text-destructive">
+            {errors.password.message}
+          </p>
         )}
       </div>
 
