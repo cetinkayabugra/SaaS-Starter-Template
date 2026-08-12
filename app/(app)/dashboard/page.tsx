@@ -1,4 +1,5 @@
 import { Sparkles } from "lucide-react";
+import { redirect } from "next/navigation";
 
 import { auth } from "@/lib/auth";
 import { getUserPlan } from "@/lib/entitlements";
@@ -7,7 +8,9 @@ import { Badge } from "@/components/ui/badge";
 
 export default async function DashboardPage() {
   const session = await auth();
-  const plan = session?.user ? await getUserPlan(session.user.id) : "free";
+  if (!session?.user) redirect("/sign-in");
+
+  const plan = await getUserPlan(session.user.id);
 
   return (
     <div className="mx-auto flex max-w-3xl flex-col gap-6">
@@ -22,7 +25,7 @@ export default async function DashboardPage() {
           <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
             <Sparkles className="size-4 text-primary" />
           </div>
-          <CardTitle>Welcome{session?.user?.name ? `, ${session.user.name}` : ""}</CardTitle>
+          <CardTitle>Welcome{session.user.name ? `, ${session.user.name}` : ""}</CardTitle>
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           This is a placeholder dashboard. Build your product&apos;s real features here.
