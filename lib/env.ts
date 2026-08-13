@@ -11,6 +11,8 @@ const envSchema = z.object({
   STRIPE_PRICE_ID_PRO: z.string().min(1),
   STRIPE_PRICE_ID_TEAM: z.string().min(1),
   NEXT_PUBLIC_APP_URL: z.string().min(1),
+  NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
+  NEXT_PUBLIC_POSTHOG_HOST: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

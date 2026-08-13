@@ -9,6 +9,7 @@ import { toast } from "sonner";
 
 import { signUp } from "@/actions/auth";
 import { signUpSchema, type SignUpInput } from "@/lib/validations";
+import { trackEvent } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,8 @@ export function SignUpForm() {
         toast.error(result.error);
         return;
       }
+
+      trackEvent("user_signed_up");
 
       const signInResult = await signIn("credentials", {
         email: values.email,
