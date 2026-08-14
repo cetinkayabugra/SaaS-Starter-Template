@@ -110,6 +110,8 @@ app/
 ├── api/
 │   ├── auth/       # Auth.js handler
 │   └── webhooks/   # Stripe webhook receiver
+├── sitemap.ts      # generates /sitemap.xml (public routes only)
+├── robots.ts       # generates /robots.txt
 actions/            # Server Actions (sign-up, checkout, billing portal)
 components/         # UI components (auth, billing, layout, shadcn primitives)
 lib/                # auth config, Prisma client, Stripe client, plans, env validation, analytics
