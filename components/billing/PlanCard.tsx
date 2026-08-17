@@ -24,10 +24,15 @@ export function PlanCard({
       {popular && (
         <Badge className="absolute -top-3 left-1/2 z-10 -translate-x-1/2">Most popular</Badge>
       )}
-      <Card className={cn(popular && "border-primary shadow-md shadow-primary/10")}>
+      <Card
+        className={cn(
+          "transition-all hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/5",
+          popular && "border-primary shadow-md shadow-primary/10"
+        )}
+      >
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle>{label}</CardTitle>
+            <CardTitle className="font-heading">{label}</CardTitle>
             <p className="mt-1 text-2xl font-semibold">
               {priceLabel}
               <span className="text-sm font-normal text-muted-foreground">/mo</span>

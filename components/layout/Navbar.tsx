@@ -30,7 +30,7 @@ export function Navbar() {
   const initial = session?.user?.name?.[0] ?? session?.user?.email?.[0] ?? "?";
 
   return (
-    <header className="sticky top-0 z-10 border-b bg-background/80 backdrop-blur-sm">
+    <header className="sticky top-0 z-10 border-b bg-background/80 shadow-sm backdrop-blur-sm">
       <div className="flex items-center justify-between px-6 py-4">
         <nav className="flex items-center gap-6">
           <Logo href="/dashboard" />

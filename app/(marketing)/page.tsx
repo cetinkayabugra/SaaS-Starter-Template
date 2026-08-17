@@ -35,8 +35,9 @@ export default async function LandingPage() {
 
   return (
     <div className="mx-auto flex max-w-5xl flex-col gap-20 px-6 pt-10 pb-20 sm:gap-28 sm:pt-14 sm:pb-28">
-      <section className="flex flex-col items-center gap-6 text-center">
-        <span className="font-mono text-xs font-medium tracking-wide text-primary uppercase">
+      <section className="relative flex flex-col items-center gap-6 text-center">
+        <div className="bg-grid-pattern pointer-events-none absolute inset-x-0 -top-10 -z-10 h-[420px]" />
+        <span className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-3 py-1 font-mono text-xs font-medium tracking-wide text-primary uppercase">
           Open-source SaaS starter
         </span>
         <h1 className="max-w-3xl font-mono text-4xl font-bold tracking-tight text-balance sm:text-6xl">
@@ -62,9 +63,12 @@ export default async function LandingPage() {
 
       <section className="grid gap-6 sm:grid-cols-3">
         {FEATURES.map(({ icon: Icon, title, description }) => (
-          <Card key={title} className="border-none bg-transparent shadow-none">
+          <Card
+            key={title}
+            className="transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md hover:shadow-primary/5"
+          >
             <CardHeader className="items-center text-center sm:items-start sm:text-left">
-              <div className="flex size-10 items-center justify-center rounded-lg bg-primary/10">
+              <div className="flex size-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/20">
                 <Icon className="size-5 text-primary" />
               </div>
               <CardTitle className="mt-2">{title}</CardTitle>
@@ -89,9 +93,14 @@ export default async function LandingPage() {
                   Most popular
                 </Badge>
               )}
-              <Card className={cn(plan.popular && "border-primary shadow-md shadow-primary/10")}>
+              <Card
+                className={cn(
+                  "transition-all hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/5",
+                  plan.popular && "border-primary shadow-md shadow-primary/10"
+                )}
+              >
                 <CardHeader>
-                  <CardTitle>{plan.label}</CardTitle>
+                  <CardTitle className="font-heading">{plan.label}</CardTitle>
                   <p className="mt-1 text-2xl font-semibold">
                     {plan.priceLabel}
                     <span className="text-sm font-normal text-muted-foreground">/mo</span>

@@ -22,7 +22,7 @@ export default async function DashboardPage() {
       </div>
       <Card>
         <CardHeader className="flex-row items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-primary/10">
+          <div className="flex size-9 items-center justify-center rounded-lg bg-gradient-to-br from-primary/15 to-primary/5 ring-1 ring-primary/20">
             <Sparkles className="size-4 text-primary" />
           </div>
           <CardTitle>Welcome{session.user.name ? `, ${session.user.name}` : ""}</CardTitle>
