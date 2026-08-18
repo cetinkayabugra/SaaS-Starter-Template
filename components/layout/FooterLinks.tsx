@@ -1,7 +1,7 @@
 import { BookOpen } from "lucide-react";
 import { SiGithub } from "react-icons/si";
 
-const REPO_URL = "https://github.com/cetinkayabugra/SaaS-Starter-Template";
+import { REPO_URL } from "@/lib/github";
 
 export function FooterLinks() {
   return (
