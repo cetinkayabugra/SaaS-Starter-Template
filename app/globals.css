@@ -134,6 +134,7 @@
     linear-gradient(to right, var(--color-foreground) 1px, transparent 1px),
     linear-gradient(to bottom, var(--color-foreground) 1px, transparent 1px);
   background-size: 40px 40px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 40%, transparent 100%);
   mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, black 40%, transparent 100%);
   opacity: 0.06;
 }
