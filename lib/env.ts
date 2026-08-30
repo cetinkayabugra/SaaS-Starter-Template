@@ -14,6 +14,7 @@ const envSchema = z.object({
   NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
   NEXT_PUBLIC_POSTHOG_HOST: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
+  ANTHROPIC_WORKSPACE_ID: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

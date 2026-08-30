@@ -54,7 +54,15 @@ export async function POST(req: Request) {
     return Response.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
+  // Identity-linked API keys are rejected unless the request names the
+  // workspace it acts in. The SDK only reads ANTHROPIC_WORKSPACE_ID on its
+  // federation/OAuth paths, not for a plain apiKey, so pass it as a header.
+  const client = new Anthropic({
+    apiKey: env.ANTHROPIC_API_KEY,
+    ...(env.ANTHROPIC_WORKSPACE_ID && {
+      defaultHeaders: { "anthropic-workspace-id": env.ANTHROPIC_WORKSPACE_ID },
+    }),
+  });
 
   const stream = client.messages.stream({
     model: "claude-opus-5",
@@ -130,7 +138,14 @@ export async function POST(req: Request) {
         { status: 429 }
       );
     }
-    if (error instanceof Anthropic.AuthenticationError) {
+    // The request body is already validated by this point, so a 401/400 from
+    // the API means server-side config is wrong (bad key, missing workspace
+    // id) — not that the caller sent something bad. The logged error above
+    // carries the specific reason.
+    if (
+      error instanceof Anthropic.AuthenticationError ||
+      error instanceof Anthropic.BadRequestError
+    ) {
       return Response.json(
         { error: "Chat is misconfigured on this deployment." },
         { status: 503 }
