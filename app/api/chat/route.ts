@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 import { env } from "@/lib/env";
+import { firstTextChunk, textDeltaOf } from "@/lib/chat-stream";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import { chatRequestSchema } from "@/lib/validations";
 
@@ -80,15 +81,7 @@ export async function POST(req: Request) {
     // auth/rate-limit/validation failures still come back as real status codes
     // instead of a 200 with an error message baked into the response text.
     const iterator = stream[Symbol.asyncIterator]();
-    let firstText: string | undefined;
-
-    while (firstText === undefined) {
-      const { done, value } = await iterator.next();
-      if (done) break;
-      if (value.type === "content_block_delta" && value.delta.type === "text_delta") {
-        firstText = value.delta.text;
-      }
-    }
+    const firstText = await firstTextChunk(iterator);
 
     const encoder = new TextEncoder();
     const body = new ReadableStream<Uint8Array>({
@@ -99,12 +92,9 @@ export async function POST(req: Request) {
           while (true) {
             const { done, value } = await iterator.next();
             if (done) break;
-            if (
-              value.type === "content_block_delta" &&
-              value.delta.type === "text_delta"
-            ) {
-              controller.enqueue(encoder.encode(value.delta.text));
-            }
+
+            const text = textDeltaOf(value);
+            if (text !== undefined) controller.enqueue(encoder.encode(text));
           }
         } catch (error) {
           // Headers are already sent, so the status can't change here — surface

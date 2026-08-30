@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { MessageCircle, Send, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { appendChunk } from "@/lib/chat-stream";
 import { MAX_CHAT_MESSAGE_LENGTH, type ChatMessage } from "@/lib/validations";
 import { cn } from "@/lib/utils";
 
@@ -75,17 +76,7 @@ export function ChatWidget() {
         if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
-        setMessages((current) => {
-          const updated = [...current];
-          const last = updated[updated.length - 1];
-          if (last?.role === "assistant") {
-            updated[updated.length - 1] = {
-              ...last,
-              content: last.content + chunk,
-            };
-          }
-          return updated;
-        });
+        setMessages((current) => appendChunk(current, chunk));
       }
     } catch {
       setError("Couldn't reach the server. Check your connection and try again.");
