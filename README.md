@@ -73,6 +73,10 @@ stripe listen --forward-to localhost:3000/api/webhooks/stripe
 
 It prints a `whsec_...` value — put that in `STRIPE_WEBHOOK_SECRET` in `.env` (it changes each time you start `stripe listen`, so update it whenever you restart the CLI).
 
+**How the handler stays correct:** Stripe retries webhooks and does not guarantee delivery order, so the receiver guards against both. Each event id is recorded in `ProcessedStripeEvent` in the same transaction as the write, making redelivery a no-op; and every subscription write is conditional on the incoming `event.created` being no older than the last one applied (`Subscription.lastEventAt`), so a late event can't overwrite newer state. A handler failure rolls back both and returns 500 so Stripe retries.
+
+`ProcessedStripeEvent` rows are only needed while Stripe might still retry (a few days). The table grows unbounded otherwise — prune it periodically, e.g. `DELETE FROM "ProcessedStripeEvent" WHERE "createdAt" < now() - interval '30 days';`
+
 ## Environment variables
 
 | Variable | Description | Where to get it |

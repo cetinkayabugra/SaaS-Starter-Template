@@ -99,6 +99,25 @@ model Subscription {
   currentPeriodEnd  DateTime?
   cancelAtPeriodEnd Boolean   @default(false)
 
+  // Stripe `event.created` of the most recent webhook applied to this row.
+  // Stripe does not guarantee delivery order, so this is compared against
+  // incoming events to reject ones that would overwrite newer state.
+  lastEventAt DateTime?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Stripe retries webhooks and can deliver the same event more than once.
+// Inserting the event id in the same transaction as the write makes handling
+// idempotent: a replay hits the primary key and is skipped.
+//
+// Rows are only useful while Stripe might still retry (a few days), so this
+// table is safe to prune periodically — see the webhooks note in the README.
+model ProcessedStripeEvent {
+  id        String   @id // Stripe event id, e.g. evt_1A2b3C
+  type      String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
 }
