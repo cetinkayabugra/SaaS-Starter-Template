@@ -144,7 +144,12 @@ pnpm dev            # start the dev server
 pnpm build           # production build
 pnpm start           # run the production build
 pnpm lint            # run ESLint
+pnpm typecheck       # run TypeScript with no emit
 pnpm test            # run the test suite (Vitest)
 pnpm prisma studio   # browse the database
 pnpm prisma migrate dev --name <name>   # create and apply a migration
 ```
+
+## Contributing
+
+`lint`, `typecheck`, `test`, and `build` run on every pull request via [GitHub Actions](.github/workflows/ci.yml). See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup notes and the conventions worth knowing before you open one.
