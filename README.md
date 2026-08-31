@@ -13,7 +13,7 @@ A full-stack SaaS starter kit with authentication and subscription billing alrea
 
 ## Prerequisites
 
-- Node.js 20+
+- Node.js 22.13+ (required by the pinned pnpm version)
 - [pnpm](https://pnpm.io/installation)
 - A PostgreSQL database — either:
   - Local, via [Docker](https://www.docker.com/products/docker-desktop/) (`docker-compose.yml` is included), or
