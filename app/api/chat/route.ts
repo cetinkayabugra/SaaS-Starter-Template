@@ -5,6 +5,12 @@ import { firstTextChunk, textDeltaOf } from "@/lib/chat-stream";
 import { getClientIp, rateLimit } from "@/lib/rate-limit";
 import { chatRequestSchema } from "@/lib/validations";
 
+// Streaming a reply can outlive the default serverless function timeout (10s
+// on several hosts), which would truncate the response mid-sentence. Raise the
+// ceiling; it's an upper bound, not a reservation, so short replies still
+// return immediately. Hosts cap this by plan — lower it if yours rejects 60.
+export const maxDuration = 60;
+
 // This endpoint is intentionally public (the widget renders on marketing pages
 // too), so every request costs money with no account behind it. Keep the
 // rate limit, the history caps in chatRequestSchema, and max_tokens tight.
