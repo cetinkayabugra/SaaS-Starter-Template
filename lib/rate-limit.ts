@@ -3,8 +3,11 @@
 // This is per-process state: it resets on redeploy and is NOT shared across
 // instances, so on serverless/multi-instance hosting the effective limit is
 // (limit x instance count). It's enough to stop casual abuse of the public
-// chat endpoint, but if you deploy this seriously, swap it for a shared store
-// (Upstash Redis, Vercel KV, etc.) — the call site stays the same.
+// chat endpoint, but a real deployment wants a shared store.
+//
+// The signature is async purely so that swap stays a change to this file:
+// every distributed store (Upstash Redis, Vercel KV, ...) has an async API,
+// and callers already await, so replacing the body below is the whole job.
 
 type Window = { count: number; resetAt: number };
 
@@ -19,10 +22,10 @@ export type RateLimitResult = {
   resetAt: number;
 };
 
-export function rateLimit(
+export async function rateLimit(
   key: string,
   { limit, windowMs }: { limit: number; windowMs: number }
-): RateLimitResult {
+): Promise<RateLimitResult> {
   const now = Date.now();
   const existing = windows.get(key);
 

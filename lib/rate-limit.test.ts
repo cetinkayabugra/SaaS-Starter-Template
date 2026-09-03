@@ -18,53 +18,53 @@ describe("rateLimit", () => {
     vi.useRealTimers();
   });
 
-  it("allows requests up to the limit", () => {
+  it("allows requests up to the limit", async () => {
     const key = nextKey();
-    expect(rateLimit(key, OPTS).ok).toBe(true);
-    expect(rateLimit(key, OPTS).ok).toBe(true);
-    expect(rateLimit(key, OPTS).ok).toBe(true);
+    expect((await rateLimit(key, OPTS)).ok).toBe(true);
+    expect((await rateLimit(key, OPTS)).ok).toBe(true);
+    expect((await rateLimit(key, OPTS)).ok).toBe(true);
   });
 
-  it("blocks the request that exceeds the limit", () => {
+  it("blocks the request that exceeds the limit", async () => {
     const key = nextKey();
-    for (let i = 0; i < OPTS.limit; i++) rateLimit(key, OPTS);
-    expect(rateLimit(key, OPTS).ok).toBe(false);
+    for (let i = 0; i < OPTS.limit; i++) await rateLimit(key, OPTS);
+    expect((await rateLimit(key, OPTS)).ok).toBe(false);
   });
 
-  it("counts each key independently", () => {
+  it("counts each key independently", async () => {
     const a = nextKey();
     const b = nextKey();
-    for (let i = 0; i < OPTS.limit; i++) rateLimit(a, OPTS);
+    for (let i = 0; i < OPTS.limit; i++) await rateLimit(a, OPTS);
 
-    expect(rateLimit(a, OPTS).ok).toBe(false);
-    expect(rateLimit(b, OPTS).ok).toBe(true);
+    expect((await rateLimit(a, OPTS)).ok).toBe(false);
+    expect((await rateLimit(b, OPTS)).ok).toBe(true);
   });
 
-  it("reports remaining count down to zero without going negative", () => {
+  it("reports remaining count down to zero without going negative", async () => {
     const key = nextKey();
-    expect(rateLimit(key, OPTS).remaining).toBe(2);
-    expect(rateLimit(key, OPTS).remaining).toBe(1);
-    expect(rateLimit(key, OPTS).remaining).toBe(0);
-    expect(rateLimit(key, OPTS).remaining).toBe(0);
+    expect((await rateLimit(key, OPTS)).remaining).toBe(2);
+    expect((await rateLimit(key, OPTS)).remaining).toBe(1);
+    expect((await rateLimit(key, OPTS)).remaining).toBe(0);
+    expect((await rateLimit(key, OPTS)).remaining).toBe(0);
   });
 
-  it("resets once the window elapses", () => {
+  it("resets once the window elapses", async () => {
     const key = nextKey();
-    for (let i = 0; i < OPTS.limit; i++) rateLimit(key, OPTS);
-    expect(rateLimit(key, OPTS).ok).toBe(false);
+    for (let i = 0; i < OPTS.limit; i++) await rateLimit(key, OPTS);
+    expect((await rateLimit(key, OPTS)).ok).toBe(false);
 
     vi.advanceTimersByTime(OPTS.windowMs);
 
-    expect(rateLimit(key, OPTS).ok).toBe(true);
+    expect((await rateLimit(key, OPTS)).ok).toBe(true);
   });
 
-  it("does not reset before the window elapses", () => {
+  it("does not reset before the window elapses", async () => {
     const key = nextKey();
-    for (let i = 0; i < OPTS.limit; i++) rateLimit(key, OPTS);
+    for (let i = 0; i < OPTS.limit; i++) await rateLimit(key, OPTS);
 
     vi.advanceTimersByTime(OPTS.windowMs - 1);
 
-    expect(rateLimit(key, OPTS).ok).toBe(false);
+    expect((await rateLimit(key, OPTS)).ok).toBe(false);
   });
 });
 

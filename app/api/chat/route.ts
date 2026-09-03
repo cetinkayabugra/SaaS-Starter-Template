@@ -38,7 +38,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const { ok, resetAt } = rateLimit(getClientIp(req), RATE_LIMIT);
+  const { ok, resetAt } = await rateLimit(getClientIp(req), RATE_LIMIT);
   if (!ok) {
     return Response.json(
       { error: "Too many messages. Please wait a moment and try again." },
