@@ -35,7 +35,7 @@ jobs:
       # packageManager field in package.json.
       - uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           # pnpm 11 requires Node >=22.13; an older Node fails when setup-node
           # invokes pnpm to resolve the cache path.
