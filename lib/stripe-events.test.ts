@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { isDuplicateEventError } from "@/lib/stripe-events";
+import {
+  EVENT_RETENTION_DAYS,
+  eventPruneCutoff,
+  isDuplicateEventError,
+} from "@/lib/stripe-events";
 
 // Shape captured from a real Prisma 7 duplicate-primary-key failure against
 // Postgres, so these fixtures match what the handler actually catches.
@@ -62,5 +66,28 @@ describe("isDuplicateEventError", () => {
 
   it("does not throw on an error with a null meta", () => {
     expect(isDuplicateEventError({ code: "P2002", meta: null })).toBe(false);
+  });
+});
+
+describe("eventPruneCutoff", () => {
+  const now = new Date("2026-06-15T12:00:00.000Z");
+
+  it("subtracts the retention window from now", () => {
+    // 30 days before 2026-06-15 is 2026-05-16.
+    expect(eventPruneCutoff(now).toISOString()).toBe("2026-05-16T12:00:00.000Z");
+  });
+
+  it("honours an explicit retention period", () => {
+    expect(eventPruneCutoff(now, 1).toISOString()).toBe("2026-06-14T12:00:00.000Z");
+  });
+
+  it("returns a cutoff in the past, never the future", () => {
+    expect(eventPruneCutoff(now).getTime()).toBeLessThan(now.getTime());
+  });
+
+  it("keeps a comfortable margin over Stripe's ~3 day retry window", () => {
+    // Pruning inside the retry window would let a redelivery be processed
+    // twice, which is the whole thing the table exists to prevent.
+    expect(EVENT_RETENTION_DAYS).toBeGreaterThan(3);
   });
 });

@@ -77,7 +77,7 @@ It prints a `whsec_...` value — put that in `STRIPE_WEBHOOK_SECRET` in `.env` 
 
 **How the handler stays correct:** Stripe retries webhooks and does not guarantee delivery order, so the receiver guards against both. Each event id is recorded in `ProcessedStripeEvent` in the same transaction as the write, making redelivery a no-op; and every subscription write is conditional on the incoming `event.created` being no older than the last one applied (`Subscription.lastEventAt`), so a late event can't overwrite newer state. A handler failure rolls back both and returns 500 so Stripe retries.
 
-`ProcessedStripeEvent` rows are only needed while Stripe might still retry (a few days). The table grows unbounded otherwise — prune it periodically, e.g. `DELETE FROM "ProcessedStripeEvent" WHERE "createdAt" < now() - interval '30 days';`
+`ProcessedStripeEvent` rows are only needed while Stripe might still retry (a few days), so the table grows unbounded on its own. Run `pnpm prune:stripe-events` on a schedule to drop records past the retention window (30 days by default, comfortably clear of Stripe's retry period).
 
 ## Environment variables
 
@@ -154,6 +154,7 @@ pnpm typecheck       # run TypeScript with no emit
 pnpm test            # run the test suite (Vitest)
 pnpm prisma studio   # browse the database
 pnpm prisma migrate dev --name <name>   # create and apply a migration
+pnpm prune:stripe-events                # drop processed webhook records past retention
 ```
 
 ## Contributing

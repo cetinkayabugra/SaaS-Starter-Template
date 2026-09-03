@@ -1,3 +1,19 @@
+/**
+ * How long a processed-event record stays useful. Stripe retries a failed
+ * webhook for up to ~3 days; past that a record can only ever match a
+ * redelivery Stripe will never send, so it's safe to drop. The generous
+ * default leaves room for backfills and manual replays from the dashboard.
+ */
+export const EVENT_RETENTION_DAYS = 30;
+
+/** Timestamp before which processed-event records can be deleted. */
+export function eventPruneCutoff(
+  now: Date = new Date(),
+  retentionDays: number = EVENT_RETENTION_DAYS
+): Date {
+  return new Date(now.getTime() - retentionDays * 24 * 60 * 60 * 1000);
+}
+
 /** Prisma's error code for a unique-constraint violation. */
 const UNIQUE_VIOLATION = "P2002";
 
