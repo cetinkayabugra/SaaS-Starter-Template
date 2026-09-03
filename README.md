@@ -49,6 +49,8 @@ This matches the default `DATABASE_URL` in `.env.example`.
 
 **Option B — hosted Postgres (Neon/Supabase/etc.):** create a database and put its connection string in `DATABASE_URL` instead. Use the *direct* (non-pooled) connection string for running migrations — pooled/PgBouncer connections can break Prisma's migration engine.
 
+> **Before deploying serverless:** the app should run against the **pooled** connection string, not the direct one. Each serverless instance opens its own connections, so the direct endpoint exhausts the connection limit under concurrency long before the database is actually busy. On Neon that's the hostname containing `-pooler`; on Supabase it's the connection-pooling port. Keep the direct URL for migrations only — a common setup is `DATABASE_URL` (pooled) for the app and a separate `DIRECT_URL` used by `prisma migrate`.
+
 Then apply the schema:
 
 ```bash
