@@ -94,6 +94,7 @@ It prints a `whsec_...` value — put that in `STRIPE_WEBHOOK_SECRET` in `.env` 
 | `NEXT_PUBLIC_APP_URL` | Base URL used to build Stripe redirect URLs | `http://localhost:3000` in dev |
 | `NEXT_PUBLIC_POSTHOG_KEY` / `NEXT_PUBLIC_POSTHOG_HOST` | Product analytics (optional — omit both to disable tracking entirely) | [PostHog](https://posthog.com/) → Project settings → Project API key. Host defaults to `https://us.i.posthog.com` |
 | `ANTHROPIC_API_KEY` | Powers the AI chat widget (optional — omit to hide the widget entirely) | [Anthropic Console](https://console.anthropic.com/settings/keys) → API keys |
+| `TRUSTED_PROXY_HOPS` | How many proxies in front of the app append to `x-forwarded-for` (optional, default `1`) | `1` covers a single reverse proxy or platform edge like Vercel. Only raise it if you genuinely run more — setting it too high reads a client-supplied value and lets callers bypass rate limiting |
 
 All of these are validated at startup (`lib/env.ts`, wired via `instrumentation.ts`) — if one is missing, you'll get a clear error instead of a cryptic failure deep in a request handler. `NEXT_PUBLIC_POSTHOG_KEY`/`NEXT_PUBLIC_POSTHOG_HOST` are the exception — they're read directly from `process.env` in client components (Next.js only inlines `NEXT_PUBLIC_*` vars into the browser bundle when referenced literally), so they're validated as optional and analytics is simply disabled if unset.
 

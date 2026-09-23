@@ -15,6 +15,17 @@ const envSchema = z.object({
   NEXT_PUBLIC_POSTHOG_HOST: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
   ANTHROPIC_WORKSPACE_ID: z.string().optional(),
+  // How many proxies in front of the app append to x-forwarded-for. Used to
+  // pick the entry your own infrastructure wrote rather than one the client
+  // supplied — see getClientIp in lib/rate-limit.ts.
+  //
+  // Empty is treated as unset so that copying .env.example (where optional
+  // vars are written as VAR="") doesn't fail startup. A non-numeric or
+  // non-positive value still fails loudly rather than silently defaulting.
+  TRUSTED_PROXY_HOPS: z.preprocess(
+    (value) => (value === "" ? undefined : value),
+    z.coerce.number().int().positive().default(1)
+  ),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -38,7 +38,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const { ok, resetAt } = await rateLimit(getClientIp(req), RATE_LIMIT);
+  const clientIp = getClientIp(req, env.TRUSTED_PROXY_HOPS);
+  const { ok, resetAt } = await rateLimit(clientIp, RATE_LIMIT);
   if (!ok) {
     return Response.json(
       { error: "Too many messages. Please wait a moment and try again." },
