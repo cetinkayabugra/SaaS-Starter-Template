@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { getClientIp, rateLimit } from "@/lib/rate-limit";
+import { MAX_TRACKED_KEYS, getClientIp, rateLimit } from "@/lib/rate-limit";
 
 const OPTS = { limit: 3, windowMs: 60_000 };
 
@@ -65,6 +65,53 @@ describe("rateLimit", () => {
     vi.advanceTimersByTime(OPTS.windowMs - 1);
 
     expect((await rateLimit(key, OPTS)).ok).toBe(false);
+  });
+});
+
+describe("rateLimit under key pressure", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  // The window map is module-level, so earlier tests leave entries behind.
+  // Rather than assume a starting size, insert until a fresh key is refused —
+  // that refusal is itself the signal that the map is full.
+  async function saturate() {
+    const prefix = `flood-${nextKey()}`;
+    for (let i = 0; i < MAX_TRACKED_KEYS * 2; i++) {
+      if (!(await rateLimit(`${prefix}-${i}`, OPTS)).ok) return;
+    }
+    throw new Error("map never reached capacity");
+  }
+
+  it("refuses a brand-new key instead of evicting live windows", async () => {
+    await saturate();
+    expect((await rateLimit(nextKey(), OPTS)).ok).toBe(false);
+  });
+
+  it("keeps existing counters intact when the map is full", async () => {
+    const victim = nextKey();
+    for (let i = 0; i < OPTS.limit; i++) await rateLimit(victim, OPTS);
+    expect((await rateLimit(victim, OPTS)).ok).toBe(false);
+
+    await saturate();
+
+    // The flood must not hand the victim a fresh allowance. Clearing the map
+    // to make room — the previous behaviour — would have done exactly that.
+    expect((await rateLimit(victim, OPTS)).ok).toBe(false);
+  });
+
+  it("accepts new keys again once windows expire", async () => {
+    await saturate();
+    expect((await rateLimit(nextKey(), OPTS)).ok).toBe(false);
+
+    vi.advanceTimersByTime(OPTS.windowMs);
+
+    expect((await rateLimit(nextKey(), OPTS)).ok).toBe(true);
   });
 });
 

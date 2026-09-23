@@ -13,8 +13,8 @@ type Window = { count: number; resetAt: number };
 
 const windows = new Map<string, Window>();
 
-// Bound the map so a flood of unique IPs can't grow it without limit.
-const MAX_TRACKED_KEYS = 10_000;
+// Bound the map so a flood of unique keys can't grow it without limit.
+export const MAX_TRACKED_KEYS = 10_000;
 
 export type RateLimitResult = {
   ok: boolean;
@@ -29,25 +29,35 @@ export async function rateLimit(
   const now = Date.now();
   const existing = windows.get(key);
 
-  if (!existing || now >= existing.resetAt) {
-    if (windows.size >= MAX_TRACKED_KEYS) {
-      for (const [k, w] of windows) {
-        if (now >= w.resetAt) windows.delete(k);
-      }
-      if (windows.size >= MAX_TRACKED_KEYS) windows.clear();
-    }
-
-    const window = { count: 1, resetAt: now + windowMs };
-    windows.set(key, window);
-    return { ok: true, remaining: limit - 1, resetAt: window.resetAt };
+  // Still inside a live window for this key — just count the request.
+  if (existing && now < existing.resetAt) {
+    existing.count += 1;
+    return {
+      ok: existing.count <= limit,
+      remaining: Math.max(0, limit - existing.count),
+      resetAt: existing.resetAt,
+    };
   }
 
-  existing.count += 1;
-  return {
-    ok: existing.count <= limit,
-    remaining: Math.max(0, limit - existing.count),
-    resetAt: existing.resetAt,
-  };
+  // This key needs a fresh window. Reclaim space from windows that have
+  // already elapsed before considering the map full.
+  if (windows.size >= MAX_TRACKED_KEYS) {
+    for (const [trackedKey, window] of windows) {
+      if (now >= window.resetAt) windows.delete(trackedKey);
+    }
+  }
+
+  // Still full, and this key isn't already tracked. Refuse rather than evict:
+  // clearing the map to make room would reset every live counter, so anyone
+  // able to fill it could hand themselves — and everyone else — a fresh
+  // allowance. Denying the untracked request keeps existing limits intact.
+  if (!windows.has(key) && windows.size >= MAX_TRACKED_KEYS) {
+    return { ok: false, remaining: 0, resetAt: now + windowMs };
+  }
+
+  const window = { count: 1, resetAt: now + windowMs };
+  windows.set(key, window);
+  return { ok: true, remaining: limit - 1, resetAt: window.resetAt };
 }
 
 /** Bucket key used when no trustworthy client address can be determined. */
