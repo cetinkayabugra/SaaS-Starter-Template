@@ -69,21 +69,63 @@ describe("rateLimit", () => {
 });
 
 describe("getClientIp", () => {
-  it("uses the first entry of x-forwarded-for", () => {
-    const req = new Request("https://example.com", {
-      headers: { "x-forwarded-for": "203.0.113.1, 70.41.3.18" },
+  const withHeaders = (headers: Record<string, string>) =>
+    new Request("https://example.com", { headers });
+
+  it("reads the entry written by the single trusted proxy", () => {
+    // One proxy appends the peer it actually saw, so that's the last entry.
+    const req = withHeaders({ "x-forwarded-for": "203.0.113.1, 70.41.3.18" });
+    expect(getClientIp(req)).toBe("70.41.3.18");
+  });
+
+  it("ignores a client-spoofed prefix", () => {
+    // The security case: a caller sending its own x-forwarded-for must not be
+    // able to choose its bucket, or the rate limit is bypassed by rotating it.
+    const spoofed = withHeaders({
+      "x-forwarded-for": "1.1.1.1, 2.2.2.2, 198.51.100.7",
     });
-    expect(getClientIp(req)).toBe("203.0.113.1");
+    expect(getClientIp(spoofed)).toBe("198.51.100.7");
+  });
+
+  it("gives a spoofing caller the same bucket every time", () => {
+    const a = getClientIp(withHeaders({ "x-forwarded-for": "9.9.9.9, 198.51.100.7" }));
+    const b = getClientIp(withHeaders({ "x-forwarded-for": "8.8.8.8, 198.51.100.7" }));
+    expect(a).toBe(b);
+  });
+
+  it("counts back further when more proxies are trusted", () => {
+    const req = withHeaders({
+      "x-forwarded-for": "1.1.1.1, 203.0.113.5, 10.0.0.1",
+    });
+    expect(getClientIp(req, 2)).toBe("203.0.113.5");
+  });
+
+  it("handles a single-entry header", () => {
+    expect(getClientIp(withHeaders({ "x-forwarded-for": "203.0.113.4" }))).toBe(
+      "203.0.113.4"
+    );
+  });
+
+  it("tolerates padding and empty segments", () => {
+    const req = withHeaders({ "x-forwarded-for": " 1.1.1.1 ,, 203.0.113.8 " });
+    expect(getClientIp(req)).toBe("203.0.113.8");
+  });
+
+  it("refuses to guess when the chain is shorter than the trusted hop count", () => {
+    // Trusting a leftover entry here would read attacker-supplied input.
+    const req = withHeaders({ "x-forwarded-for": "1.1.1.1" });
+    expect(getClientIp(req, 3)).toBe("unknown");
   });
 
   it("falls back to x-real-ip", () => {
-    const req = new Request("https://example.com", {
-      headers: { "x-real-ip": "203.0.113.9" },
-    });
-    expect(getClientIp(req)).toBe("203.0.113.9");
+    expect(getClientIp(withHeaders({ "x-real-ip": "203.0.113.9" }))).toBe("203.0.113.9");
   });
 
   it("returns a stable placeholder when no IP header is present", () => {
     expect(getClientIp(new Request("https://example.com"))).toBe("unknown");
+  });
+
+  it("returns the placeholder rather than an empty string", () => {
+    expect(getClientIp(withHeaders({ "x-real-ip": "   " }))).toBe("unknown");
   });
 });

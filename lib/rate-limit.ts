@@ -50,12 +50,41 @@ export async function rateLimit(
   };
 }
 
+/** Bucket key used when no trustworthy client address can be determined. */
+export const UNKNOWN_CLIENT = "unknown";
+
 /**
- * Best-effort client IP. Values come from proxy-controlled headers, so treat
- * this as a rate-limit bucket key, never as an authentication signal.
+ * Best-effort client address, for use as a rate-limit bucket key — never as an
+ * authentication signal.
+ *
+ * `trustedProxyHops` is how many proxies sit between the client and this app
+ * and append to `x-forwarded-for` (1 for a single reverse proxy or platform
+ * edge such as Vercel — the common case). Setting it too high reads an
+ * attacker-supplied value; too low buckets everyone behind your proxy together.
  */
-export function getClientIp(req: Request): string {
+export function getClientIp(req: Request, trustedProxyHops = 1): string {
   const forwardedFor = req.headers.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0]!.trim();
-  return req.headers.get("x-real-ip") ?? "unknown";
+
+  if (forwardedFor) {
+    const hops = forwardedFor
+      .split(",")
+      .map((hop) => hop.trim())
+      .filter(Boolean);
+
+    // Proxies APPEND to this header, so the leftmost entry is whatever the
+    // client claimed and is fully attacker-controlled — reading it lets anyone
+    // get a fresh rate-limit bucket per request just by rotating the value.
+    // Count from the right instead: with N trusted proxies in front of the
+    // app, the real peer is the Nth entry from the end, because those are the
+    // only entries your own infrastructure wrote.
+    const index = hops.length - trustedProxyHops;
+    const candidate = hops[index];
+    if (candidate) return candidate;
+
+    // Fewer entries than configured hops means the header didn't pass through
+    // the expected chain. Trusting any part of it here would be guessing.
+    return UNKNOWN_CLIENT;
+  }
+
+  return req.headers.get("x-real-ip")?.trim() || UNKNOWN_CLIENT;
 }
