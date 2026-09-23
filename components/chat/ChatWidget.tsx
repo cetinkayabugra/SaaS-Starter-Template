@@ -19,13 +19,24 @@ export function ChatWidget() {
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  // Tracks whether the panel was open, so focus is only restored after an
+  // actual close — not on the initial render, which would steal focus.
+  const wasOpen = useRef(false);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages, isStreaming]);
 
   useEffect(() => {
-    if (isOpen) inputRef.current?.focus();
+    if (isOpen) {
+      inputRef.current?.focus();
+    } else if (wasOpen.current) {
+      // Closing left focus on <body>, which drops keyboard users back to the
+      // top of the page. Send them back to the control they came from.
+      triggerRef.current?.focus();
+    }
+    wasOpen.current = isOpen;
   }, [isOpen]);
 
   useEffect(() => {
@@ -88,6 +99,7 @@ export function ChatWidget() {
   if (!isOpen) {
     return (
       <Button
+        ref={triggerRef}
         size="icon-lg"
         aria-label="Open chat"
         onClick={() => setIsOpen(true)}
@@ -116,7 +128,17 @@ export function ChatWidget() {
         </Button>
       </div>
 
-      <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-3">
+      {/*
+        Replies arrive asynchronously and a screen reader would otherwise get
+        no notice of them. "polite" waits for a pause rather than interrupting,
+        which also stops each streamed chunk being announced on its own.
+      */}
+      <div
+        ref={scrollRef}
+        aria-live="polite"
+        aria-busy={isStreaming}
+        className="flex-1 space-y-3 overflow-y-auto px-4 py-3"
+      >
         <p className="text-sm text-muted-foreground">{GREETING}</p>
 
         {messages.map((message, index) => (
