@@ -9,6 +9,12 @@ export default defineConfig({
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // Migrations run over DIRECT_URL when it's set, falling back to
+    // DATABASE_URL. In production DATABASE_URL should be the *pooled*
+    // connection so the app doesn't exhaust connections under concurrency —
+    // but PgBouncer-style pooling breaks Prisma's migration engine, so the
+    // migration path needs the direct endpoint. Locally, where the two are the
+    // same, leaving DIRECT_URL unset is fine.
+    url: process.env["DIRECT_URL"] || process.env["DATABASE_URL"],
   },
 });
