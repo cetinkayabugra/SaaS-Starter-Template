@@ -32,7 +32,7 @@ export function PlanCard({
       >
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
-            <CardTitle className="font-heading">{label}</CardTitle>
+            <CardTitle>{label}</CardTitle>
             <p className="mt-1 text-2xl font-semibold">
               {priceLabel}
               <span className="text-sm font-normal text-muted-foreground">/mo</span>

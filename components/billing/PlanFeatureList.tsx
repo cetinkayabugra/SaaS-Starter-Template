@@ -20,7 +20,7 @@ export function PlanFeatureList({ features }: { features: readonly string[] }) {
         const description = FEATURE_DESCRIPTIONS[feature];
         return (
           <li key={feature} className="flex items-start gap-2 text-muted-foreground">
-            <Check className="mt-0.5 size-4 shrink-0 text-primary" />
+            <Check className="mt-0.5 size-4 shrink-0 text-included" />
             {description ? (
               <Tooltip>
                 <TooltipTrigger className="text-left underline decoration-muted-foreground/50 decoration-dotted underline-offset-4 hover:text-foreground">
