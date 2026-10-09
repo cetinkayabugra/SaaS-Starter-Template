@@ -23,10 +23,7 @@ export default function Error({
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 p-6 text-center">
       <Logo />
       <div className="flex flex-col items-center gap-2">
-        <p className="font-mono text-sm font-medium tracking-wide text-destructive uppercase">
-          Error
-        </p>
-        <h1 className="text-2xl font-semibold tracking-tight">Something went wrong</h1>
+        <h1 className="text-2xl font-semibold tracking-[-0.02em]">Something went wrong</h1>
         <p className="max-w-sm text-sm text-muted-foreground">
           This one&apos;s on us. Try again, and if it keeps happening the details are in
           our logs.
